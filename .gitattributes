@@ -1,0 +1,9 @@
+# GoRC (FreeBASIC's resource compiler) and cmd.exe need Windows line endings,
+# so always check these out with CRLF, whatever the machine's git settings
+*.rc   text eol=crlf
+*.bat  text eol=crlf
+*.iss  text eol=crlf
+
+# Never touch line endings or diff these
+*.ico  binary
+*.png  binary

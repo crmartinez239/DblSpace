@@ -1,0 +1,39 @@
+// dblspace.rc - resources for dblspace.exe
+// Keep this file with Windows (CRLF) line endings - GoRC fails with
+// "No resources found" otherwise.
+
+// ID 1 is the first icon group, so Explorer uses it as the .exe icon.
+1 ICON "dblspace.ico"
+2 ICON "dblspace_off.ico"
+
+// 24 = RT_MANIFEST: DPI awareness + modern controls
+1 24 "dblspace.manifest"
+
+// Version info: shown in Properties / Task Manager, and the installer
+// (installer\dblspace.iss) reads its version number from ProductVersion.
+// Bump all four places together for a new release.
+1 VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEOS 0x40004
+FILETYPE 1
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "DblSpace - double-tap Space to type a period\0"
+            VALUE "FileVersion", "1.0.0\0"
+            VALUE "InternalName", "dblspace\0"
+            VALUE "OriginalFilename", "dblspace.exe\0"
+            VALUE "ProductName", "DblSpace\0"
+            VALUE "ProductVersion", "1.0.0\0"
+            VALUE "CompanyName", "Christopher Martinez\0"
+            VALUE "LegalCopyright", "Copyright (c) 2026 Christopher Martinez. MIT License.\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

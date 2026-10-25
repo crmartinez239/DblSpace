@@ -1,0 +1,15 @@
+# Build output: the program and installer (recreate with build.bat)
+dist/
+
+# FreeBASIC / GoRC intermediate files
+*.o
+*.obj
+*.res
+*.a
+
+# Editor and OS clutter
+.vscode/
+*.bak
+*.tmp
+Thumbs.db
+desktop.ini
