@@ -4,7 +4,7 @@ Double-tap the Space bar to type a period, like on a Mac or phone.
 
 Type `Hello` and tap Space twice quickly, and you get `Hello. ` ready for the next sentence. It works in any Windows app and with any keyboard layout.
 
-Website: https://crmartinez239.github.io/DblSpace/
+Website: https://dblspace.heymon.gg/
 
 ## Install
 
