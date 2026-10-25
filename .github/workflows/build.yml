@@ -1,0 +1,87 @@
+# Builds dblspace.exe and the installer on GitHub's Windows machines.
+#
+# - Every push and pull request: build and keep the files as a downloadable
+#   "artifact" on the run's page (Actions tab).
+# - Pushing a version tag (git tag v1.0.0 && git push origin v1.0.0):
+#   also creates a DRAFT GitHub release with the installer attached, so you
+#   can check it before publishing.
+#
+# Code signing (SignPath) will be added between "build" and "release" once
+# the project is accepted.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FB_URL: https://downloads.sourceforge.net/project/fbc/FreeBASIC-1.10.1/Binaries-Windows/FreeBASIC-1.10.1-winlibs-gcc-9.3.0.7z
+  # SHA-256 of the file above (its SHA-1 matches FreeBASIC's official sha1sums.txt)
+  FB_SHA256: 68ec3f3ad550f0052cdc5d0985295fb37bcc067897198938906c72a69f6a37e4
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FreeBASIC 1.10.1
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP 'freebasic.7z'
+          curl.exe -sSL --retry 3 -o $archive $env:FB_URL
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash
+          if ($hash -ne $env:FB_SHA256) { throw "FreeBASIC download checksum mismatch: $hash" }
+          7z x $archive "-o$env:RUNNER_TEMP" -y | Out-Null
+          "FBC=$env:RUNNER_TEMP\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe" >> $env:GITHUB_ENV
+
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup not found" }
+          "ISCC=$iscc" >> $env:GITHUB_ENV
+
+      - name: Build program and installer
+        shell: cmd
+        run: build.bat
+
+      - name: Check version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = (Get-Item dist\dblspace.exe).VersionInfo.ProductVersion
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
+          if ($ver -ne $tag) { throw "Tag $tag doesn't match the version in src\dblspace.rc ($ver)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dblspace
+          path: |
+            dist/dblspace.exe
+            dist/DblSpace-Setup-*.exe
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dblspace
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: DblSpace-Setup-*.exe

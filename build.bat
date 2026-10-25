@@ -4,9 +4,14 @@ rem Needs FreeBASIC 1.10 (64-bit) and Inno Setup 6.
 setlocal
 cd /d "%~dp0"
 
-set "FBC=C:\Program Files\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe"
-set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
+rem Tool locations. To use your own, set FBC / ISCC before running, e.g.
+rem   set FBC=D:\FreeBASIC\fbc64.exe
+if not defined FBC set "FBC=C:\Program Files\FreeBASIC-1.10.1-winlibs-gcc-9.3.0\fbc64.exe"
+if not defined ISCC set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 if not exist "%ISCC%" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
+if not exist "%FBC%" goto :nofbc
+if not exist "%ISCC%" goto :noiscc
 
 if not exist dist mkdir dist
 
@@ -32,6 +37,14 @@ echo === Building installer
 echo.
 echo Done. Program and installer are in the "dist" folder.
 exit /b 0
+
+:nofbc
+echo FreeBASIC not found at "%FBC%" - set FBC to your fbc64.exe
+goto :fail
+
+:noiscc
+echo Inno Setup not found - set ISCC to your ISCC.exe
+goto :fail
 
 :fail
 echo.
