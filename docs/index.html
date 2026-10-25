@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DblSpace</title>
+<meta name="description" content="Double-tap the Space bar to type a period on Windows, like on a Mac or iPhone. Free and open source.">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="DblSpace">
+<meta property="og:description" content="Double-tap Space to type a period on Windows, like on a Mac or iPhone.">
+<meta property="og:image" content="https://crmartinez239.github.io/DblSpace/icon.png">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f4f6fa;
+    --text: #1a1d24;
+    --muted: #5b6372;
+    --line: #e2e6ee;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-text: #ffffff;
+    --card: #ffffff;
+    --window: #ffffff;
+    --window-bar: #eef1f6;
+    --caret: #2563eb;
+    --flash: #dbe7ff;
+    --code-bg: #eef1f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1218;
+      --bg-soft: #161a22;
+      --text: #e8ebf1;
+      --muted: #9aa3b2;
+      --line: #262c38;
+      --accent: #4f8cff;
+      --accent-hover: #6b9fff;
+      --accent-text: #0b1020;
+      --card: #161a22;
+      --window: #1b2029;
+      --window-bar: #222834;
+      --caret: #6b9fff;
+      --flash: #233660;
+      --code-bg: #222834;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  a:hover { color: var(--accent-hover); }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font: 0.9em Consolas, "Cascadia Mono", ui-monospace, monospace;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; color: var(--text); text-decoration: none; }
+  .brand img { width: 32px; height: 32px; }
+  .nav-links { display: flex; gap: 22px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 15px; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* Hero */
+  .hero { padding: 72px 20px 40px; text-align: center; }
+  .hero img.logo { width: 96px; height: 96px; margin-bottom: 20px; }
+  h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.1; margin: 0 0 16px; letter-spacing: -0.02em; }
+  .lede { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 620px; margin: 0 auto 32px; }
+  .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 8px; font-weight: 600; font-size: 16px;
+    text-decoration: none; border: 1px solid var(--line); color: var(--text); background: var(--card);
+  }
+  .btn:hover { border-color: var(--muted); color: var(--text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--accent-text); }
+  .btn svg { width: 18px; height: 18px; fill: currentColor; }
+  .small { color: var(--muted); font-size: 14px; margin-top: 14px; }
+
+  /* Demo window */
+  .demo { max-width: 640px; margin: 48px auto 0; text-align: left; }
+  .window {
+    background: var(--window); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12); overflow: hidden;
+  }
+  .window-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--window-bar); padding: 8px 14px; font-size: 13px; color: var(--muted);
+  }
+  .window-bar .dots { letter-spacing: 6px; }
+  .window-body {
+    padding: 22px 24px; min-height: 112px;
+    font: 19px/1.6 "Segoe UI", system-ui, sans-serif; white-space: pre-wrap; word-break: break-word;
+  }
+  .caret {
+    display: inline-block; width: 2px; height: 1.2em; background: var(--caret);
+    vertical-align: text-bottom; margin-left: 1px; animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .flash { background: var(--flash); border-radius: 3px; transition: background 0.6s; }
+  .keys { display: flex; gap: 8px; justify-content: center; margin-top: 16px; min-height: 40px; }
+  .key {
+    border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 6px;
+    padding: 6px 28px; font-size: 13px; color: var(--muted); background: var(--card);
+    transition: transform 0.08s, border-color 0.08s, color 0.08s;
+  }
+  .key.down { transform: translateY(2px); border-color: var(--accent); color: var(--accent); }
+
+  /* Sections */
+  section { padding: 64px 0; }
+  section.soft { background: var(--bg-soft); }
+  h2 { font-size: 30px; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .section-lede { color: var(--muted); margin: 0 0 36px; max-width: 640px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card .ico { font-size: 22px; margin-bottom: 10px; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .split img { width: 100%; max-width: 446px; border-radius: 8px; border: 1px solid var(--line); display: block; margin: 0 auto; }
+  ol.steps { padding-left: 22px; margin: 0; }
+  ol.steps li { margin-bottom: 14px; }
+  ol.steps li::marker { color: var(--accent); font-weight: 700; }
+
+  .note {
+    border-left: 3px solid var(--accent); background: var(--card);
+    padding: 14px 18px; border-radius: 0 8px 8px 0; color: var(--muted); font-size: 15px; margin-top: 22px;
+  }
+  .prose { max-width: 720px; }
+  .prose ul { padding-left: 20px; }
+  .prose li { margin-bottom: 8px; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .split { grid-template-columns: 1fr; }
+    .nav-links a.hide-sm { display: none; }
+    .hero { padding-top: 48px; }
+    section { padding: 48px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caret { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#"><img src="favicon.png" alt="">DblSpace</a>
+    <nav class="nav-links">
+      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#privacy">Privacy</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/crmartinez239/DblSpace">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <img class="logo" src="icon.png" alt="DblSpace icon">
+    <h1>Double-tap Space for a period.</h1>
+    <p class="lede">The handy shortcut from Mac and iPhone, now on Windows. Tap Space twice at the end of a sentence and DblSpace types <strong>". "</strong> for you.</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/crmartinez239/DblSpace/releases/latest">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>
+        Download for Windows
+      </a>
+      <a class="btn" href="https://github.com/crmartinez239/DblSpace">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+    <p class="small">Free and open source · Windows 10 &amp; 11 (64-bit) · about 2 MB</p>
+
+    <div class="demo" aria-label="Animation: typing a sentence, then double-tapping Space turns the two spaces into a period and a space">
+      <div class="window">
+        <div class="window-bar"><span>Untitled - Notepad</span><span class="dots" aria-hidden="true">— ☐ ✕</span></div>
+        <div class="window-body" id="demo-text"><span id="typed"></span><span class="caret"></span></div>
+      </div>
+      <div class="keys" aria-hidden="true"><span class="key" id="k1">Space</span><span class="key" id="k2">Space</span></div>
+    </div>
+  </div>
+
+  <section id="features" class="soft">
+    <div class="wrap">
+      <h2>Small app, done right</h2>
+      <p class="section-lede">DblSpace sits quietly in the system tray and only steps in when you double-tap Space after a word.</p>
+      <div class="grid">
+        <div class="card"><div class="ico">⌨️</div><h3>Works everywhere</h3><p>Word, Outlook, browsers, chat apps. Any app and any keyboard layout, including accented and non-Latin ones.</p></div>
+        <div class="card"><div class="ico">🔒</div><h3>Stays out of the way</h3><p>Never in password fields. Skips code editors, terminals and fullscreen games by default, and leaves Chinese, Japanese and Korean input alone.</p></div>
+        <div class="card"><div class="ico">⏱️</div><h3>Your speed</h3><p>Set how fast the two taps must be, from 150 ms to a relaxed full second.</p></div>
+        <div class="card"><div class="ico">🎯</div><h3>Per-app control</h3><p>Turn it off in specific apps, or turn it on only in the apps you choose.</p></div>
+        <div class="card"><div class="ico">⚡</div><h3>Lightweight</h3><p>A single 120 KB program with nothing extra to install. It uses almost no memory or CPU.</p></div>
+        <div class="card"><div class="ico">🛡️</div><h3>Private</h3><p>It never records what you type and has no network code. It can't send anything anywhere.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap split">
+      <div>
+        <h2>Get started</h2>
+        <ol class="steps">
+          <li><a href="https://github.com/crmartinez239/DblSpace/releases/latest">Download the installer</a> (<code>DblSpace-Setup-…exe</code>) and run it. It installs for your account only, so no admin rights are needed.</li>
+          <li>Look for the blue icon in the system tray, near the clock. Blue means on and gray means off.</li>
+          <li>Click the icon and choose <strong>Settings</strong> to adjust the speed or choose where it works.</li>
+        </ol>
+        <div class="note">Windows may say "Windows protected your PC" because the installer isn't code-signed yet. Click <strong>More info → Run anyway</strong>. To remove DblSpace, use <strong>Settings → Apps</strong> in Windows. That removes everything, including its settings.</div>
+      </div>
+      <div><img src="settings.png" alt="The DblSpace Settings window, with options for typing speed and the apps it works in" width="446" height="563" loading="lazy"></div>
+    </div>
+  </section>
+
+  <section id="privacy" class="soft">
+    <div class="wrap prose">
+      <h2>Your keystrokes and privacy</h2>
+      <p>To notice a double-tap, DblSpace has to see each key you press. Here is exactly what it does with them:</p>
+      <ul>
+        <li><strong>It doesn't record what you type.</strong> For each key it keeps only a category (letter or digit, space, closing bracket or quote, or something else) for the last few keys. That's enough to tell whether a double space follows a word.</li>
+        <li><strong>It saves nothing about your typing.</strong> Only your settings are saved, in the Windows registry under <code>HKEY_CURRENT_USER\Software\DblSpace</code>.</li>
+        <li><strong>It sends nothing anywhere.</strong> DblSpace has no network code at all.</li>
+      </ul>
+      <p>This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.</p>
+      <p>The full source code is <a href="https://github.com/crmartinez239/DblSpace/blob/main/src/dblspace.bas">on GitHub</a>, so you can check all of this yourself.</p>
+    </div>
+  </section>
+
+  <section id="code-signing">
+    <div class="wrap prose">
+      <h2>Code signing policy</h2>
+      <p>Releases are not code-signed yet. Free signing from the <a href="https://signpath.org/">SignPath Foundation</a> has been requested.</p>
+      <p>Every release is built from this repository by <a href="https://github.com/crmartinez239/DblSpace/actions">GitHub Actions</a>, not on anyone's PC.</p>
+      <p>Team roles:</p>
+      <ul>
+        <li>Committers and reviewers: <a href="https://github.com/crmartinez239">Christopher Martinez</a></li>
+        <li>Approvers: <a href="https://github.com/crmartinez239">Christopher Martinez</a></li>
+      </ul>
+      <p>Privacy: see <a href="#privacy">Your keystrokes and privacy</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Christopher Martinez · <a href="https://github.com/crmartinez239/DblSpace/blob/main/LICENSE.txt">MIT License</a></span>
+    <span><a href="https://github.com/crmartinez239/DblSpace">Source code</a> · <a href="https://github.com/crmartinez239/DblSpace/issues">Report a problem</a></span>
+  </div>
+</footer>
+
+<script>
+// Demo: type a sentence, double-tap Space, the two spaces become ". "
+(function () {
+  var typed = document.getElementById('typed');
+  var k1 = document.getElementById('k1'), k2 = document.getElementById('k2');
+  var sentences = ['Thanks for the update', 'See you at three', 'Sounds good to me'];
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (reduce) { typed.textContent = sentences[0] + '. ' + sentences[1] + '. '; return; }
+
+  var text = '';
+  function render(flashFrom) {
+    if (flashFrom == null) { typed.textContent = text; return; }
+    typed.innerHTML = '';
+    typed.appendChild(document.createTextNode(text.slice(0, flashFrom)));
+    var f = document.createElement('span');
+    f.className = 'flash';
+    f.textContent = text.slice(flashFrom);
+    typed.appendChild(f);
+    setTimeout(function () { f.className = ''; }, 700);
+  }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function press(key) { key.classList.add('down'); return wait(110).then(function () { key.classList.remove('down'); }); }
+
+  async function typeSentence(s) {
+    for (var i = 0; i < s.length; i++) {
+      text += s[i]; render();
+      await wait(55 + Math.random() * 70);
+    }
+    await wait(350);
+    await press(k1); text += ' '; render();
+    await wait(140);
+    await press(k2);
+    text = text.slice(0, -1) + '. ';     // what DblSpace does
+    render(text.length - 2);
+    await wait(900);
+  }
+
+  async function loop() {
+    while (true) {
+      text = ''; render();
+      await wait(500);
+      for (var i = 0; i < sentences.length; i++) await typeSentence(sentences[i]);
+      await wait(1800);
+    }
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
